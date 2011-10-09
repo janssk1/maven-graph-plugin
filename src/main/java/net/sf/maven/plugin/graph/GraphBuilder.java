@@ -1,6 +1,6 @@
 package net.sf.maven.plugin.graph;
 
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import net.sf.maven.plugin.graph.graph.Graph;
 
 /**
@@ -10,5 +10,5 @@ import net.sf.maven.plugin.graph.graph.Graph;
  */
 public interface GraphBuilder {
 
-    Graph buildGraph(ArtifactIdentifier artifact);
+    Graph buildGraph(ArtifactRevisionIdentifier artifact);
 }

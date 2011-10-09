@@ -3,6 +3,7 @@ package net.sf.maven.plugin.graph;
 import net.sf.maven.plugin.graph.domain.Artifact;
 import net.sf.maven.plugin.graph.domain.ArtifactDependency;
 import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import net.sf.maven.plugin.graph.graph.Graph;
 import net.sf.maven.plugin.graph.graph.Vertex;
 import org.apache.maven.plugin.logging.Log;
@@ -17,6 +18,17 @@ import java.util.*;
  */
 public class BreadthFirstGraphBuilder implements GraphBuilder {
 
+    private static final DependencyAttributeRetriever SCOPE = new DependencyAttributeRetriever() {
+        public String getAttributeValue(ArtifactDependency dep) {
+            return dep.getScope();
+        }
+    };
+
+    private static final DependencyAttributeRetriever VERSION = new DependencyAttributeRetriever() {
+        public String getAttributeValue(ArtifactDependency dep) {
+            return dep.getId().getVersion();
+        }
+    };
     private final ArtifactResolver artifactResolver;
 
     private final Log logger;
@@ -30,17 +42,18 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
     private class ArtifactToResolve {
         private final Vertex vertex;
         private final int depth;
-        private final ExcludedDeps excludedDeps;
+
+        private final ArtifactDependency incoming;
         private final ArtifactToResolve parent;
         private final NearestDependencySet nearestDependencySet;
-        private final Map<String, String> dependencyScope = new HashMap<String, String>();
+        private final Map<ArtifactIdentifier, ArtifactDependency> dependencyMgnt = new HashMap<ArtifactIdentifier, ArtifactDependency>();
 
 
-        private ArtifactToResolve(Vertex vertex, ArtifactToResolve parent, int depth, ExcludedDeps excludedDeps, NearestDependencySet nearestDependencySet) {
+        private ArtifactToResolve(Vertex vertex, ArtifactToResolve parent, int depth, ArtifactDependency incoming, NearestDependencySet nearestDependencySet) {
             this.vertex = vertex;
             this.parent = parent;
             this.depth = depth;
-            this.excludedDeps = excludedDeps;
+            this.incoming = incoming;
             this.nearestDependencySet = nearestDependencySet;
         }
 
@@ -53,56 +66,82 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
                     MessageFormat.format(offset + "Visiting {0}, current depth = {1}", vertex.getArtifactIdentifier(), depth));
         }
 
+        private String getScope(ArtifactDependency dep, String scope) {
+              if (scope.equals("compile")) {
+                //check if it's overwritten by dependencyMgnt of incoming deps. Overwriting is only done for provided scope..
+                  ArtifactToResolve parent= this.parent;
+                  while (parent != null) {
+                      ArtifactDependency overriden = parent.dependencyMgnt.get(dep.getId().getArtifactIdentifier());
+                      if (overriden != null && "provided".equals(overriden.getScope())) {
+                          return "provided";
+                      }
+                      parent = parent.parent;
+                  }
+              }
+            return scope;
+        }
         public ArtifactToResolve createDependency(ArtifactDependency dependency) {
-            if (!isOptionalOrExcluded(dependency, excludedDeps)) {
-                String scope = getScope(dependency.getDependency().getUniqueId());
+            String scope = getScope(dependency, dependency.getScope());//dependency, SCOPE);
 
-
+            if (!isOptionalOrExcluded(dependency, scope)) {
+                nearestDependencySet.add(dependency.getId().getArtifactIdentifier(), getOverriddenDependencyValue(dependency, VERSION));
                 ArtifactDependency nearestDependency = nearestDependencySet.getNearest(dependency, scope);
-                if (isDependencyIncluded(nearestDependency, excludedDeps)) {
-                    Vertex depVertex = vertex.addDependency(nearestDependency.getDependency(), dependency);
-                    return new ArtifactToResolve(depVertex, this, depth + 1, excludedDeps.create(dependency), nearestDependencySet);
+                if (isDependencyShown(scope)) {
+                    Vertex depVertex = vertex.addDependency(nearestDependency.getId(), dependency);
+                    return new ArtifactToResolve(depVertex, this, depth + 1, dependency, nearestDependencySet);
                 }
             }
             return null;
         }
 
-        private String getScope(String artifactId) {
+        private boolean isOptionalOrExcluded(ArtifactDependency artifactDependency, String scope) {
+            return scope.equals("test") || scope.equals("system") || artifactDependency.isOptional() || isExcluded(artifactDependency.getId().getArtifactIdentifier());
+        }
+
+        private boolean isExcluded(ArtifactIdentifier artifactIdentifier) {
+            return incoming != null && (incoming.getExclusions().contains(artifactIdentifier) || parent.isExcluded(artifactIdentifier));
+        }
+
+        private String getOverriddenDependencyValue(ArtifactDependency dep, DependencyAttributeRetriever attribute) {
+            String value = parent != null ? parent.getOverriddenDependencyValue(dep.getId().getArtifactIdentifier(), attribute) : null;
+            return value != null ? value : attribute.getAttributeValue(dep);
+        }
+
+        private String getOverriddenDependencyValue(ArtifactIdentifier artifactId, DependencyAttributeRetriever attribute) {
             if (parent != null) {
-                String scope = parent.getScope(artifactId);
+                String scope = parent.getOverriddenDependencyValue(artifactId, attribute);
                 if (scope != null) {
                     return scope;
                 }
             }
-            return dependencyScope.get(artifactId);
-
+            ArtifactDependency override = dependencyMgnt.get(artifactId);
+            return override != null ? attribute.getAttributeValue(override) : null;
         }
 
-        public void add(ArtifactDependency artifactDependency) {
-            if (!isOptionalOrExcluded(artifactDependency, excludedDeps)) {
-                nearestDependencySet.add(artifactDependency);
-            }
-            dependencyScope.put(artifactDependency.getDependency().getUniqueId(), artifactDependency.getScope());
-        }
+    }
+
+    private static interface DependencyAttributeRetriever {
+        String getAttributeValue(ArtifactDependency dep);
     }
 
 
     private void getAllDependencies(Vertex vertex) {
         Queue<ArtifactToResolve> artifactQueue = new LinkedList<ArtifactToResolve>();
-        artifactQueue.add(new ArtifactToResolve(vertex, null, 0, new ExcludedDeps(), new NearestDependencySet()));
+        artifactQueue.add(new ArtifactToResolve(vertex, null, 0, null, new NearestDependencySet()));
         while (!artifactQueue.isEmpty()) {
-            ArtifactToResolve artifact = artifactQueue.poll();
-            artifact.print();
-            Vertex v = artifact.vertex;
+            ArtifactToResolve artifactToResolve = artifactQueue.poll();
+            artifactToResolve.print();
+            Vertex v = artifactToResolve.vertex;
             if (v.getArtifact() == null) {
+                //if (v.getArtifactIdentifier().g)
                 Artifact dependent = artifactResolver.resolveArtifact(v.getArtifactIdentifier());
                 v.setArtifact(dependent);
-                final List<ArtifactDependency> artifactDependencyList = dependent.getDependencies();
-                for (ArtifactDependency artifactDependency : artifactDependencyList) {
-                    artifact.add(artifactDependency);
+                for (ArtifactDependency artifactDependency : dependent.getDependencyManagerDependencies()) {
+                    artifactToResolve.dependencyMgnt.put(artifactDependency.getId().getArtifactIdentifier(), artifactDependency);
                 }
+                final List<ArtifactDependency> artifactDependencyList = dependent.getDependencies();
                 for (ArtifactDependency dependency : artifactDependencyList) {
-                    ArtifactToResolve toResolve = artifact.createDependency(dependency);
+                    ArtifactToResolve toResolve = artifactToResolve.createDependency(dependency);
                     if (toResolve != null) {
                         artifactQueue.add(toResolve);
                     }
@@ -111,7 +150,7 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         }
     }
 
-    public Graph buildGraph(ArtifactIdentifier artifact) {
+    public Graph buildGraph(ArtifactRevisionIdentifier artifact) {
         //getAllDependencies(artifact);
         Graph graph = new Graph(artifact);
         getAllDependencies(graph.getRoot());
@@ -121,65 +160,26 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
 
     private class NearestDependencySet {
 
-        private final Map<String, ArtifactDependency> idToVersionMap = new HashMap<String, ArtifactDependency>();
+        private final Map<ArtifactIdentifier, String> idToVersionMap = new HashMap<ArtifactIdentifier, String>();
 
-        public ArtifactDependency getNearest(ArtifactDependency id, String scope) {
-            ArtifactIdentifier dependency = id.getDependency();
-            String artifactId = dependency.getUniqueId();
-            ArtifactDependency nearestVersion = idToVersionMap.get(artifactId);
-            ArtifactDependency newDep = new ArtifactDependency(id.getDependent(), new ArtifactIdentifier(dependency.getArtifactId(), dependency.getGroupId(), nearestVersion.getDependency().getVersion(), id.getClassifier()), scope);
-            newDep.setExcluded(id.isExcluded());
-            newDep.setOptional(id.isOptional());
+        public ArtifactDependency getNearest(ArtifactDependency dependency, String scope) {
+            ArtifactRevisionIdentifier id = dependency.getId();
+            ArtifactIdentifier artifactId = id.getArtifactIdentifier();
+            String nearestVersion = idToVersionMap.get(artifactId);
+            ArtifactDependency newDep = new ArtifactDependency(new ArtifactRevisionIdentifier(id.getArtifactId(), id.getGroupId(), nearestVersion, id.getClassifier()), scope);
+            newDep.setOptional(dependency.isOptional());
             return newDep;
         }
 
-        public void add(ArtifactDependency dep) {
-            String identifier = dep.getDependency().getUniqueId();
+        public void add(ArtifactIdentifier identifier, String version) {
             if (!idToVersionMap.containsKey(identifier)) {
-                idToVersionMap.put(identifier, dep);
+                idToVersionMap.put(identifier, version);
             }
         }
     }
 
-    private class ExcludedDeps {
-
-        private Set<String> excluded = new HashSet<String>();
-        private ExcludedDeps parent;
-
-        public ExcludedDeps() {
-        }
-
-        private ExcludedDeps(ArtifactDependency artifactDependency) {
-            List<ArtifactIdentifier> exclusions = artifactDependency.getExclusions();
-            for (ArtifactIdentifier exclusion : exclusions) {
-                excluded.add(exclusion.getUniqueId());
-            }
-        }
-
-        public ExcludedDeps create(ArtifactDependency dep) {
-            if (dep.getExclusions().size() != 0) {
-                ExcludedDeps deps = new ExcludedDeps(dep);
-                deps.parent = this;
-                return deps;
-            } else {
-                return this;
-            }
-        }
-
-
-
-        public boolean isExcluded(ArtifactIdentifier id) {
-            return excluded.contains(id.getUniqueId()) || (parent != null && parent.isExcluded(id));
-        }
-    }
-
-    private static boolean isOptionalOrExcluded(ArtifactDependency artifactDependency, ExcludedDeps excludedDeps) {
-        return artifactDependency.getScope().equals("test") || artifactDependency.getScope().equals("system") || artifactDependency.isOptional() || excludedDeps.isExcluded(artifactDependency.getDependency());
-    }
-
-
-    private static boolean isDependencyIncluded(ArtifactDependency dependency, ExcludedDeps excludedDeps) {
-        return (!isOptionalOrExcluded(dependency, excludedDeps) && !dependency.getScope().equals("test") && !dependency.getScope().equals("provided"));
+    private static boolean isDependencyShown(String scope) {
+        return !scope.equals("provided");
     }
 
 

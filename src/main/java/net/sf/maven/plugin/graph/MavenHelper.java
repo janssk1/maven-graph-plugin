@@ -2,12 +2,12 @@ package net.sf.maven.plugin.graph;
 
 import net.sf.maven.plugin.graph.domain.ArtifactDependency;
 import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Exclusion;
 import org.apache.maven.project.MavenProject;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,49 +17,27 @@ import java.util.List;
  */
 class MavenHelper {
 
-    public static List<ArtifactDependency> resolveDependencies(ArtifactIdentifier id, MavenProject model, List<ArtifactIdentifier> depExclusions) {
+    public static List<ArtifactDependency> resolveDependencies(MavenProject model) {
         ArrayList<ArtifactDependency> dependencies;
         dependencies = new ArrayList<ArtifactDependency>(model.getDependencies().size());
         for (Dependency d : (List<Dependency>) model.getDependencies()) {
-            dependencies.add(createArtifactDependency(id, depExclusions, d));
+            dependencies.add(createArtifactDependency(d));
         }
         return dependencies;
     }
 
-    public static ArtifactDependency createArtifactDependency(ArtifactIdentifier id, List<ArtifactIdentifier> depExclusions, Dependency d) {
-        ArtifactIdentifier dai;
-        boolean isExcluded;
-        List<ArtifactIdentifier> exclusions;
-        dai = new ArtifactIdentifier(d);
-        isExcluded = shouldBeExcluded(dai, depExclusions);
-        exclusions = resolveExclusions(d);
-
+    public static ArtifactDependency createArtifactDependency(Dependency d) {
         ArtifactDependency dependency = new ArtifactDependency(
-                id,
-                dai,
+                new ArtifactRevisionIdentifier(d),
                 d.getScope()
         );
         dependency.setClassifier(d.getClassifier());
         dependency.setOptional(d.isOptional());
-        dependency.setExcluded(isExcluded);
-        dependency.setExclusions(exclusions);
+        for (Exclusion ex : d.getExclusions()) {
+            ArtifactIdentifier id = new ArtifactIdentifier(ex.getArtifactId(), ex.getGroupId());
+            dependency.getExclusions().add(id);
+        }
         return dependency;
     }
 
-    private static List<ArtifactIdentifier> resolveExclusions(Dependency d) {
-        List<ArtifactIdentifier> exclusions = new ArrayList<ArtifactIdentifier>(d.getExclusions().size());
-        for (Exclusion ex : d.getExclusions()) {
-            ArtifactIdentifier id = new ArtifactIdentifier(ex.getArtifactId(), ex.getGroupId(), "");
-            exclusions.add(id);
-        }
-        return exclusions;
-    }
-
-    private static boolean shouldBeExcluded(ArtifactIdentifier dai, Collection<ArtifactIdentifier> depExclusions) {
-        for (ArtifactIdentifier depExc : depExclusions) {
-            if (depExc.getGroupId().equals(dai.getGroupId()) && depExc.getArtifactId().equals(dai.getArtifactId()))
-                return true;
-        }
-        return false;
-    }
 }

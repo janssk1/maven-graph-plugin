@@ -1,7 +1,7 @@
 package net.sf.maven.plugin.graph;
 
 import net.sf.maven.plugin.graph.domain.ArtifactDependency;
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import net.sf.maven.plugin.graph.graph.Edge;
 import net.sf.maven.plugin.graph.graph.Graph;
 import net.sf.maven.plugin.graph.graph.Vertex;
@@ -37,7 +37,7 @@ public class GraphBuilderTest extends PlexusTestCase {
 
     public void testGraphOfALeafNodeReturnsThatNode() throws Exception {
         expectGraph("a:1.0");
-        checkGraph("a:1.0");
+        checkGraph();
     }
 
     public void testANodeThatHasAJarFileReturnsANonNullSize() {
@@ -63,49 +63,57 @@ public class GraphBuilderTest extends PlexusTestCase {
         assertTrue(a.getArtifact().getSize() > 0);
     }
 
+    public void testProvidedScopeInDepMgntOverridesNestedDependencyScopesToProvided() {
+        expectGraph("c:1.0-withprovideda");
+        expectEdge("c:1.0-withprovideda", "b:1.0", "compile:1.0");
+        //expectEdge("b:1.0", "a:1.0", "provided:1.0");
+        checkGraph();
+    }
+
     public void testGraphOfANodeWithOneDependency() throws Exception {
         expectGraph("b:1.0");
         expectEdge("b:1.0", "a:1.0", "compile:1.0");
-        checkGraph("b:1.0");
+        checkGraph();
     }
 
     public void testGraphOfANodeWithOneProvidedDependency() throws Exception {
         expectGraph("b:1.0-withprovideda");
         // expectEdge("b:1.0-withprovideda", "a:1.0", "provided:1.0");
-        checkGraph("b:1.0-withprovideda");
+        checkGraph();
     }
 
     public void testGraphOfANodeWithAnUnknownDependency() throws Exception {
         expectGraph("b:1.0-withunknowna");
         expectEdge("b:1.0-withunknowna", "a:unknown", "compile:unknown");
-        checkGraph("b:1.0-withunknowna");
+        checkGraph();
     }
 
     public void testGraphOfANodeWithTransitiveCompileDependency() throws Exception {
         expectGraph("c:1.0");
         expectEdge("c:1.0", "b:1.0", "compile:1.0");
         expectEdge("b:1.0", "a:1.0", "compile:1.0");
-        checkGraph("c:1.0");
+        checkGraph();
     }
 
     public void testGraphOfANodeWithTransitiveCompileDependencyThatGetsExcluded() throws Exception {
         expectGraph("c:1.0-withexcludeda");
         expectEdge("c:1.0-withexcludeda", "b:1.0", "compile:1.0");
-        checkGraph("c:1.0-withexcludeda");
+        checkGraph();
     }
 
 
     public void testGraphOfANodeWithTransitiveCompileDependencyThatGetsOverriddenInDependencyMgnt() throws Exception {
         expectGraph("c:1.0-withexplicitaversion");
         expectEdge("c:1.0-withexplicitaversion", "b:1.0", "compile:1.0");
-        expectEdge("b:1.0", "a:1.0", "compile:1.0");
-        checkGraph("c:1.0-withexplicitaversion");
+        expectEdge("b:1.0", "a:1.1", "compile:1.0");
+        checkGraph();
     }
 
-    public void testGraphOfANodeWithTransitiveCompileDependencyThatIsOverridenWithTestScope() throws Exception {
+    public void testTestScopeDepDoesNotOverridesNestedDependencyScopes() {
         expectGraph("c:1.0-withtestscopeda");
         expectEdge("c:1.0-withtestscopeda", "b:1.0", "compile:1.0");
-        checkGraph("c:1.0-withtestscopeda");
+        expectEdge("b:1.0", "a:1.0", "compile:1.0");
+        checkGraph();
     }
 
     public void testGraphOfANodeWithTransitiveCompileDependencyThatGetsOverriddenByNearerDependency() throws Exception {
@@ -113,7 +121,7 @@ public class GraphBuilderTest extends PlexusTestCase {
         expectEdge("c:1.0-withexplicitaversionasdep", "b:1.0", "compile:1.0");
         expectEdge("b:1.0", "a:1.1", "compile:1.0");
         expectEdge("c:1.0-withexplicitaversionasdep", "a:1.1", "compile:1.1");
-        checkGraph("c:1.0-withexplicitaversionasdep");
+        checkGraph();
     }
 
     public void testNearestDependencyInAnotherBranchIsSelectedAnyway() throws Exception {
@@ -123,11 +131,11 @@ public class GraphBuilderTest extends PlexusTestCase {
         expectEdge("b:1.0", "a:1.1", "compile:1.0");
         expectEdge("e:1.0", "d:1.0", "compile:1.0");
         expectEdge("d:1.0", "a:1.1", "compile:1.1");
-        checkGraph("e:1.0");
+        checkGraph();
     }
 
-    private Graph checkGraph(String nodeId) {
-        Graph graph = buildGraph(nodeId);
+    private Graph checkGraph() {
+        Graph graph = builder.buildGraph(expectedGraph.getRoot().getArtifactIdentifier());
         assertEquals(expectedGraph.getRoot(), graph.getRoot());
         return graph;
         //assertEquals(expectedGraph.toString(), graph.toString());
@@ -147,7 +155,7 @@ public class GraphBuilderTest extends PlexusTestCase {
             assertEquals(actual.getArtifactIdentifier(), actualEdge.from.getArtifactIdentifier());
             assertEquals(expectedEdge.to, actualEdge.to);
             assertEquals(expectedEdge.dependency.getScope(), actualEdge.dependency.getScope());
-            assertEquals(expectedEdge.dependency.getDependency(), actualEdge.dependency.getDependency());
+            assertEquals(expectedEdge.dependency.getId(), actualEdge.dependency.getId());
         }
     }
 
@@ -159,17 +167,17 @@ public class GraphBuilderTest extends PlexusTestCase {
         if (expectedGraph == null) {
             expectedGraph = new Graph(createArtifactId(fromNodeId));
         }
-        ArtifactIdentifier fromArtifact = createArtifactId(fromNodeId);
-        ArtifactIdentifier toArtifact = createArtifactId(toNodeId);
+        ArtifactRevisionIdentifier fromArtifact = createArtifactId(fromNodeId);
+        ArtifactRevisionIdentifier toArtifact = createArtifactId(toNodeId);
         String[] split = depInfo.split(":");
         String scope = split[0];
         String version = split[1];
-        expectedGraph.findOrCreate(fromArtifact).addDependency(toArtifact, new ArtifactDependency(fromArtifact, new ArtifactIdentifier(toArtifact.getArtifactId(), toArtifact.getGroupId(), version), scope));
+        expectedGraph.findOrCreate(fromArtifact).addDependency(toArtifact, new ArtifactDependency(new ArtifactRevisionIdentifier(toArtifact.getArtifactId(), toArtifact.getGroupId(), version), scope));
     }
 
-    private ArtifactIdentifier createArtifactId(String nodeId) {
+    private ArtifactRevisionIdentifier createArtifactId(String nodeId) {
         String[] split = nodeId.split(":");
-        return new ArtifactIdentifier(split[0], "a", split[1]);
+        return new ArtifactRevisionIdentifier(split[0], "a", split[1]);
     }
 
 

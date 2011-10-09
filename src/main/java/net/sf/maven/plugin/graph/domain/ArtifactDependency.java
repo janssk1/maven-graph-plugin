@@ -1,7 +1,7 @@
 package net.sf.maven.plugin.graph.domain;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User: janssk1
@@ -9,33 +9,25 @@ import java.util.List;
  * Time: 9:51 PM
  */
 public class ArtifactDependency {
-    private ArtifactIdentifier dependent;
-    private ArtifactIdentifier dependency;
+    private ArtifactRevisionIdentifier id;
     private String scope;
     private boolean optional;
-    private boolean excluded;
-    private List<ArtifactIdentifier> exclusions;
+    private Set<ArtifactIdentifier> exclusions;
     private String classifier;
 
-    public ArtifactDependency(ArtifactIdentifier dependent, ArtifactIdentifier dependency, String scope) {
-        this.dependent = dependent;
-        this.dependency = dependency;
+    public ArtifactDependency(ArtifactRevisionIdentifier id, String scope) {
+        this.id = id;
         if (scope == null || scope.equals("")) {
             this.scope = org.apache.maven.artifact.Artifact.SCOPE_COMPILE;
         } else {
             this.scope = scope;
         }
         optional = false;
-        excluded = false;
-        exclusions = new ArrayList<ArtifactIdentifier>();
+        exclusions = new HashSet<ArtifactIdentifier>();
     }
 
-    public ArtifactIdentifier getDependent() {
-        return dependent;
-    }
-
-    public ArtifactIdentifier getDependency() {
-        return dependency;
+    public ArtifactRevisionIdentifier getId() {
+        return id;
     }
 
     public String getScope() {
@@ -50,22 +42,9 @@ public class ArtifactDependency {
         this.optional = optional;
     }
 
-    public boolean isExcluded() {
-        return excluded;
-    }
-
-    public void setExcluded(boolean excluded) {
-        this.excluded = excluded;
-    }
-
-    public List<ArtifactIdentifier> getExclusions() {
+    public Set<ArtifactIdentifier> getExclusions() {
         return exclusions;
     }
-
-    public void setExclusions(List<ArtifactIdentifier> exclusions) {
-        this.exclusions = exclusions;
-    }
-
 
     public void setClassifier(String classifier) {
         this.classifier = classifier;

@@ -2,7 +2,7 @@ package net.sf.maven.plugin.graph.graph;
 
 import net.sf.maven.plugin.graph.domain.Artifact;
 import net.sf.maven.plugin.graph.domain.ArtifactDependency;
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,12 +14,12 @@ import java.util.List;
  */
 public class Vertex {
 
-    private final ArtifactIdentifier artifactIdentifier;
+    private final ArtifactRevisionIdentifier artifactIdentifier;
     private final List<Edge> edges = new LinkedList<Edge>();
     private Artifact artifact;
     private final Graph graph;
 
-    Vertex(Graph graph, ArtifactIdentifier artifactIdentifier) {
+    Vertex(Graph graph, ArtifactRevisionIdentifier artifactIdentifier) {
         this.artifactIdentifier = artifactIdentifier;
         this.graph = graph;
     }
@@ -28,7 +28,7 @@ public class Vertex {
         return edges;
     }
 
-    public ArtifactIdentifier getArtifactIdentifier() {
+    public ArtifactRevisionIdentifier getArtifactIdentifier() {
         return artifactIdentifier;
     }
 
@@ -40,7 +40,7 @@ public class Vertex {
         this.artifact = artifact;
     }
 
-    public Vertex addDependency(ArtifactIdentifier nearest, ArtifactDependency original) {
+    public Vertex addDependency(ArtifactRevisionIdentifier nearest, ArtifactDependency original) {
         Vertex target = graph.findOrCreate(nearest);
         Edge e = new Edge(original, this, target);
         edges.add(e);

@@ -1,6 +1,6 @@
 package net.sf.maven.plugin.graph.graph;
 
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,11 +13,11 @@ import java.util.Map;
  */
 public class Graph {
 
-    private final Map<ArtifactIdentifier, Vertex> vertices = new HashMap<ArtifactIdentifier, Vertex>();
+    private final Map<ArtifactRevisionIdentifier, Vertex> vertices = new HashMap<ArtifactRevisionIdentifier, Vertex>();
 
     private Vertex root;
 
-    public Graph(ArtifactIdentifier root) {
+    public Graph(ArtifactRevisionIdentifier root) {
         this.root = new Vertex(this, root);
         vertices.put(root, this.root);
     }
@@ -31,7 +31,7 @@ public class Graph {
     }
 
 
-    public Vertex findOrCreate(ArtifactIdentifier artifactId) {
+    public Vertex findOrCreate(ArtifactRevisionIdentifier artifactId) {
         Vertex vertex = vertices.get(artifactId);
         if (vertex == null) {
             vertex = new Vertex(this, artifactId);

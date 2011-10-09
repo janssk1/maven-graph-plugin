@@ -1,11 +1,12 @@
 package net.sf.maven.plugin.graph;
 
 import net.sf.maven.plugin.graph.domain.Artifact;
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
 import net.sf.maven.plugin.graph.domain.ArtifactImpl;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import net.sf.maven.plugin.graph.domain.MockArtifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
+import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.model.Dependency;
@@ -16,7 +17,6 @@ import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuildingException;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,7 +40,7 @@ public class MavenArtifactResolver implements ArtifactResolver{
         this.mavenProjectBuilder = mavenProjectBuilder;
     }
 
-    private MavenProject getMavenProject(ArtifactIdentifier artifactIdentifier) throws ProjectBuildingException {
+    private MavenProject getMavenProject(ArtifactRevisionIdentifier artifactIdentifier) throws ProjectBuildingException {
         logger.debug("Fetching artifact " + artifactIdentifier);
 
         org.apache.maven.artifact.Artifact artifact = artifactFactory.createArtifact(artifactIdentifier.getGroupId(), artifactIdentifier.getArtifactId(), artifactIdentifier.getVersion(), org.apache.maven.artifact.Artifact.SCOPE_COMPILE, POM_TYPE);
@@ -49,7 +49,7 @@ public class MavenArtifactResolver implements ArtifactResolver{
                 artifact, Collections.emptyList(), localRepository, false);
     }
 
-    public Artifact resolveArtifact(ArtifactIdentifier identifier) {
+    public Artifact resolveArtifact(ArtifactRevisionIdentifier identifier) {
         try {
             MavenProject mavenProject;
             mavenProject = getMavenProject(identifier);
@@ -61,51 +61,88 @@ public class MavenArtifactResolver implements ArtifactResolver{
         }
     }
 
-    private void configureArtifact(ArtifactIdentifier id, ArtifactImpl artifact, MavenProject mavenProject) {
+    private void configureArtifact(ArtifactImpl artifact, MavenProject mavenProject) {
         artifact.getDependencyManagerDependencies().clear();
         if (mavenProject.getDependencyManagement() != null) {
             List<Dependency> dependencies = mavenProject.getDependencyManagement().getDependencies();
             for (Dependency dependency : dependencies) {
-                artifact.getDependencyManagerDependencies().add(MavenHelper.createArtifactDependency(id, Collections.<ArtifactIdentifier>emptyList(), dependency));
+                artifact.getDependencyManagerDependencies().add(MavenHelper.createArtifactDependency(dependency));
             }
         }
     }
 
-    private Artifact createArtifact(ArtifactIdentifier id, MavenProject mavenProject) {
+    private Artifact createArtifact(ArtifactRevisionIdentifier id, MavenProject mavenProject) {
         ArtifactImpl artifact = new ArtifactImpl(mavenProject);
         File path = getArtifactFile(id, mavenProject);
         long fileLength = path.length();
         artifact.setSize(fileLength);
-        artifact.setDependencies(MavenHelper.resolveDependencies(id, mavenProject, new ArrayList<ArtifactIdentifier>()));
-        configureArtifact(id, artifact, mavenProject);
+        artifact.setDependencies(MavenHelper.resolveDependencies(mavenProject));
+        configureArtifact(artifact, mavenProject);
         return artifact;
     }
 
-    private File getArtifactFile(ArtifactIdentifier id, MavenProject mavenProject) {
+    private File getArtifactFile(ArtifactRevisionIdentifier id, MavenProject mavenProject) {
         id = applyRelocation(id, mavenProject);
         org.apache.maven.artifact.Artifact mainArtifact = mavenProject.getArtifact();
 
-        String type = mainArtifact.getType();
-        if (type.equals("bundle")) {
-            type = "jar";//some artifacts have type 'bundle', but they are just jars..
-        }
         //add classifier..
-        mainArtifact = new DefaultArtifact(id.getGroupId(), id.getArtifactId(), VersionRange.createFromVersion(id.getVersion()), mainArtifact.getScope(), type, id.getClassifier(), mainArtifact.getArtifactHandler());
+        ArtifactHandler artifactHandler = new MyArtifactHandler(mainArtifact.getArtifactHandler());
+        mainArtifact = new DefaultArtifact(id.getArtifactIdentifier().getGroupId(), id.getArtifactIdentifier().getArtifactId(), VersionRange.createFromVersion(id.getVersion()), mainArtifact.getScope(), mainArtifact.getType(), id.getClassifier(), artifactHandler);
 
         String relativePath = localRepository.pathOf(mainArtifact);
         return new File(localRepository.getBasedir(), relativePath);
     }
 
-    private ArtifactIdentifier applyRelocation(ArtifactIdentifier id, MavenProject mavenProject) {
+    private ArtifactRevisionIdentifier applyRelocation(ArtifactRevisionIdentifier id, MavenProject mavenProject) {
         if (mavenProject.getDistributionManagement() != null) {
             Relocation relocation = mavenProject.getDistributionManagement().getRelocation();
             if (relocation != null) {
                 String groupId = relocation.getGroupId() != null ? relocation.getGroupId() : id.getGroupId();
                 String artifactId = relocation.getArtifactId() != null ? relocation.getArtifactId() : id.getArtifactId();
                 String version = relocation.getVersion() != null ? relocation.getVersion() : id.getVersion();
-                return new ArtifactIdentifier(artifactId, groupId, version, id.getClassifier());
+                return new ArtifactRevisionIdentifier(artifactId, groupId, version, id.getClassifier());
             }
         }
         return id;
+    }
+
+    private static class MyArtifactHandler implements ArtifactHandler {
+        private final ArtifactHandler originalHandler;
+
+        public MyArtifactHandler(ArtifactHandler originalHandler) {
+            this.originalHandler = originalHandler;
+        }
+
+        public String getExtension() {
+            String extension = originalHandler.getExtension();
+            if (extension.equals("bundle")) {
+                extension = "jar";
+            }
+            return extension;
+        }
+
+        public String getDirectory() {
+            return originalHandler.getDirectory();
+        }
+
+        public String getClassifier() {
+            return originalHandler.getClassifier();
+        }
+
+        public String getPackaging() {
+            return originalHandler.getPackaging();
+        }
+
+        public boolean isIncludesDependencies() {
+            return originalHandler.isIncludesDependencies();
+        }
+
+        public String getLanguage() {
+            return originalHandler.getLanguage();
+        }
+
+        public boolean isAddedToClasspath() {
+            return originalHandler.isAddedToClasspath();
+        }
     }
 }

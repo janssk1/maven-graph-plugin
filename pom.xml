@@ -60,4 +60,9 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <scm>
+        <connection>scm:git:git@github.com:janssk1/maven-graph-plugin.git</connection>
+        <url>https://github.com/janssk1/maven-graph-plugin</url>
+        <developerConnection>scm:git:git@github.com:janssk1/maven-graph-plugin.git</developerConnection>
+    </scm>
 </project>

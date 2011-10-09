@@ -16,7 +16,7 @@ package net.sf.maven.plugin.graph;
  * limitations under the License.
  */
 
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import net.sf.maven.plugin.graph.graph.Graph;
 import net.sf.maven.plugin.graph.graphml.GraphMLGenerator;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -99,7 +99,7 @@ public class GraphMojo
 
         ArtifactResolver artifactResolver = new MavenArtifactResolver(getLog(), localRepository, this.artifactFactory, mavenProjectBuilder);
         GraphBuilder graphBuilder = new BreadthFirstGraphBuilder(getLog(), artifactResolver);
-        Graph graph = graphBuilder.buildGraph(new ArtifactIdentifier(artifactId, groupId, version));
+        Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version));
         GraphSerializer graphSerializer = new GraphMLGenerator();
         try {
             File file = new File(outputDirectory, "dependency.graphml");

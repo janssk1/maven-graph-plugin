@@ -1,7 +1,7 @@
 package net.sf.maven.plugin.graph;
 
 import net.sf.maven.plugin.graph.domain.Artifact;
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 
 /**
  * User: janssk1
@@ -9,5 +9,5 @@ import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
  * Time: 12:19 AM
  */
 public interface ArtifactResolver {
-    Artifact resolveArtifact(ArtifactIdentifier identifier);
+    Artifact resolveArtifact(ArtifactRevisionIdentifier identifier);
 }

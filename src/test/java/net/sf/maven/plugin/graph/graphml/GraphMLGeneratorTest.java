@@ -1,11 +1,11 @@
 package net.sf.maven.plugin.graph.graphml;
 
+import junit.framework.TestCase;
 import net.sf.maven.plugin.graph.domain.ArtifactDependency;
-import net.sf.maven.plugin.graph.domain.ArtifactIdentifier;
+import net.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import net.sf.maven.plugin.graph.domain.MockArtifact;
 import net.sf.maven.plugin.graph.graph.Graph;
 import net.sf.maven.plugin.graph.graph.Vertex;
-import junit.framework.TestCase;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -40,10 +40,10 @@ public class GraphMLGeneratorTest extends TestCase {
     }
 
     public void testGraphMl() throws IOException, SAXException, ParserConfigurationException {
-        Graph graph = new Graph(new ArtifactIdentifier("a", "a", "1.0"));
+        Graph graph = new Graph(new ArtifactRevisionIdentifier("a", "a", "1.0"));
         Vertex root = graph.getRoot();
         root.setArtifact(new MockArtifact());
-        root.addDependency(new ArtifactIdentifier("a", "b", "1"), new ArtifactDependency(new ArtifactIdentifier("a", "a", "1.0"), new ArtifactIdentifier("a", "b", "2"), "default"));
+        root.addDependency(new ArtifactRevisionIdentifier("a", "b", "1"), new ArtifactDependency(new ArtifactRevisionIdentifier("a", "b", "2"), "default"));
         generateAndValidate(graph);
     }
 

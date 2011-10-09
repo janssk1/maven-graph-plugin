@@ -118,9 +118,9 @@ public class GraphMLGenerator implements GraphSerializer {
     public void serialize(Graph graph, Writer writer) throws IOException {
         Builder gen = new Builder(writer);
 
-        Color[] colors = new Color[200];
+        Color[] colors = new Color[240];
         for (int i = 0;i < colors.length;i++) {
-            colors[i] = new Color(255, 200 - i, 200 - i);
+            colors[i] = new Color(255, colors.length - i, colors.length - i);
         }
         FixedIntervalColorRange greenToRed = new FixedIntervalColorRange(0, 2000 *K, colors);
 /*        StaticColorRange jarSizeColorRange = new StaticColorRange()
@@ -143,7 +143,7 @@ public class GraphMLGenerator implements GraphSerializer {
             for (Vertex vertex : graph.getVertices()) {
                 List<Edge> edges = vertex.getEdges();
                 for (Edge edge : edges) {
-                    String declaredVersion = edge.dependency.getDependency().getVersion();
+                    String declaredVersion = edge.dependency.getId().getVersion();
                     String actualVersion = edge.to.getArtifactIdentifier().getVersion();
                     String edgeLabel = edge.dependency.getScope();
                     if (!declaredVersion.equals(actualVersion)) {
