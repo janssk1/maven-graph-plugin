@@ -1,0 +1,1 @@
+Documentation can be found at https://github.com/janssk1/maven-graph-plugin/wiki/Manual
