@@ -1,4 +1,4 @@
-package com.sf.maven.plugin.graph.graphml;
+package com.github.janssk1.maven.plugin.graph.graphml;
 
 import junit.framework.TestCase;
 

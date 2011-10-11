@@ -1,8 +1,8 @@
-package com.sf.maven.plugin.graph;
+package com.github.janssk1.maven.plugin.graph;
 
-import com.sf.maven.plugin.graph.domain.ArtifactDependency;
-import com.sf.maven.plugin.graph.domain.ArtifactIdentifier;
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactDependency;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactIdentifier;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Exclusion;
 import org.apache.maven.project.MavenProject;

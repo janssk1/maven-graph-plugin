@@ -1,6 +1,6 @@
-package com.sf.maven.plugin.graph;
+package com.github.janssk1.maven.plugin.graph;
 
-import com.sf.maven.plugin.graph.graph.Graph;
+import com.github.janssk1.maven.plugin.graph.graph.Graph;
 
 import java.io.IOException;
 import java.io.Writer;

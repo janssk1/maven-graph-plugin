@@ -1,9 +1,9 @@
-package com.sf.maven.plugin.graph;
+package com.github.janssk1.maven.plugin.graph;
 
-import com.sf.maven.plugin.graph.domain.Artifact;
-import com.sf.maven.plugin.graph.domain.ArtifactImpl;
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
-import com.sf.maven.plugin.graph.domain.MockArtifact;
+import com.github.janssk1.maven.plugin.graph.domain.Artifact;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactImpl;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.domain.MockArtifact;
 import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.handler.ArtifactHandler;

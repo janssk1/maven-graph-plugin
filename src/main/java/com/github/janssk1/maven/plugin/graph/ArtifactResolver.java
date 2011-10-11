@@ -1,7 +1,7 @@
-package com.sf.maven.plugin.graph;
+package com.github.janssk1.maven.plugin.graph;
 
-import com.sf.maven.plugin.graph.domain.Artifact;
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.domain.Artifact;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 
 /**
  * User: janssk1

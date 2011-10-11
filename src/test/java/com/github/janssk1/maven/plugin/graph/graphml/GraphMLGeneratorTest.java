@@ -1,11 +1,11 @@
-package com.sf.maven.plugin.graph.graphml;
+package com.github.janssk1.maven.plugin.graph.graphml;
 
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactDependency;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.domain.MockArtifact;
+import com.github.janssk1.maven.plugin.graph.graph.Graph;
+import com.github.janssk1.maven.plugin.graph.graph.Vertex;
 import junit.framework.TestCase;
-import com.sf.maven.plugin.graph.domain.ArtifactDependency;
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
-import com.sf.maven.plugin.graph.domain.MockArtifact;
-import com.sf.maven.plugin.graph.graph.Graph;
-import com.sf.maven.plugin.graph.graph.Vertex;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;

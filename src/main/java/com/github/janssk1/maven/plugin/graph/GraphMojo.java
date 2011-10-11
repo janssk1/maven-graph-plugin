@@ -1,4 +1,4 @@
-package com.sf.maven.plugin.graph;
+package com.github.janssk1.maven.plugin.graph;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -16,9 +16,9 @@ package com.sf.maven.plugin.graph;
  * limitations under the License.
  */
 
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
-import com.sf.maven.plugin.graph.graph.Graph;
-import com.sf.maven.plugin.graph.graphml.GraphMLGenerator;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.graph.Graph;
+import com.github.janssk1.maven.plugin.graph.graphml.GraphMLGenerator;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;

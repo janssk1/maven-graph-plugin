@@ -1,6 +1,6 @@
-package com.sf.maven.plugin.graph.graph;
+package com.github.janssk1.maven.plugin.graph.graph;
 
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 
 import java.util.Collection;
 import java.util.HashMap;

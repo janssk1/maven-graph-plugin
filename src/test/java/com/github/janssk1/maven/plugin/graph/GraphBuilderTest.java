@@ -1,10 +1,10 @@
-package com.sf.maven.plugin.graph;
+package com.github.janssk1.maven.plugin.graph;
 
-import com.sf.maven.plugin.graph.domain.ArtifactDependency;
-import com.sf.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
-import com.sf.maven.plugin.graph.graph.Edge;
-import com.sf.maven.plugin.graph.graph.Graph;
-import com.sf.maven.plugin.graph.graph.Vertex;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactDependency;
+import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
+import com.github.janssk1.maven.plugin.graph.graph.Edge;
+import com.github.janssk1.maven.plugin.graph.graph.Graph;
+import com.github.janssk1.maven.plugin.graph.graph.Vertex;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.DefaultArtifactRepository;
 import org.apache.maven.artifact.repository.layout.DefaultRepositoryLayout;

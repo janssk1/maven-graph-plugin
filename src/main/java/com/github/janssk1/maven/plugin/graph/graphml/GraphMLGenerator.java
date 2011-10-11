@@ -1,9 +1,9 @@
-package com.sf.maven.plugin.graph.graphml;
+package com.github.janssk1.maven.plugin.graph.graphml;
 
-import com.sf.maven.plugin.graph.GraphSerializer;
-import com.sf.maven.plugin.graph.graph.Edge;
-import com.sf.maven.plugin.graph.graph.Graph;
-import com.sf.maven.plugin.graph.graph.Vertex;
+import com.github.janssk1.maven.plugin.graph.GraphSerializer;
+import com.github.janssk1.maven.plugin.graph.graph.Edge;
+import com.github.janssk1.maven.plugin.graph.graph.Graph;
+import com.github.janssk1.maven.plugin.graph.graph.Vertex;
 
 import java.awt.*;
 import java.io.*;

@@ -1,4 +1,4 @@
-package com.sf.maven.plugin.graph.domain;
+package com.github.janssk1.maven.plugin.graph.domain;
 
 import org.apache.maven.project.MavenProject;
 
