@@ -24,6 +24,7 @@ public class GraphBuilderTest extends PlexusTestCase {
 
     private GraphBuilder builder;
     private Graph expectedGraph;
+    private DependencyOptions options = new DependencyOptions();
 
     private <T> T getComponent(Class<T> t) throws Exception {
         return (T) lookup(t.getName());
@@ -66,7 +67,7 @@ public class GraphBuilderTest extends PlexusTestCase {
     public void testProvidedScopeInDepMgntOverridesNestedDependencyScopesToProvided() {
         expectGraph("c:1.0-withprovideda");
         expectEdge("c:1.0-withprovideda", "b:1.0", "compile:1.0");
-        //expectEdge("b:1.0", "a:1.0", "provided:1.0");
+        expectEdge("b:1.0", "a:1.1", "provided", "compile:1.0");
         checkGraph();
     }
 
@@ -76,11 +77,19 @@ public class GraphBuilderTest extends PlexusTestCase {
         checkGraph();
     }
 
-    public void testGraphOfANodeWithOneProvidedDependency() throws Exception {
+    public void testProvidedNodeCanBeHidden() throws Exception {
+        options.setShowProvidedScope(false);
         expectGraph("b:1.0-withprovideda");
-        // expectEdge("b:1.0-withprovideda", "a:1.0", "provided:1.0");
         checkGraph();
     }
+
+    public void testProvidedNodeCanBeShown() throws Exception {
+        options.setShowProvidedScope(true);
+        expectGraph("b:1.0-withprovideda");
+        expectEdge("b:1.0-withprovideda", "a:1.0", "provided:1.0");
+        checkGraph();
+    }
+
 
     public void testGraphOfANodeWithAnUnknownDependency() throws Exception {
         expectGraph("b:1.0-withunknowna");
@@ -135,14 +144,14 @@ public class GraphBuilderTest extends PlexusTestCase {
     }
 
     private Graph checkGraph() {
-        Graph graph = builder.buildGraph(expectedGraph.getRoot().getArtifactIdentifier());
+        Graph graph = builder.buildGraph(expectedGraph.getRoot().getArtifactIdentifier(), options);
         assertEquals(expectedGraph.getRoot(), graph.getRoot());
         return graph;
         //assertEquals(expectedGraph.toString(), graph.toString());
     }
 
     private Graph buildGraph(String nodeId) {
-        return builder.buildGraph(createArtifactId(nodeId));
+        return builder.buildGraph(createArtifactId(nodeId), options);
     }
 
     private void assertEquals(Vertex expected, Vertex actual) {
@@ -154,8 +163,9 @@ public class GraphBuilderTest extends PlexusTestCase {
             Edge actualEdge = actual.getEdges().get(0);
             assertEquals(actual.getArtifactIdentifier(), actualEdge.from.getArtifactIdentifier());
             assertEquals(expectedEdge.to, actualEdge.to);
-            assertEquals(expectedEdge.dependency.getScope(), actualEdge.dependency.getScope());
-            assertEquals(expectedEdge.dependency.getId(), actualEdge.dependency.getId());
+            assertEquals(expectedEdge.scope, actualEdge.scope);
+            assertEquals(expectedEdge.originalDependency.getScope(), actualEdge.originalDependency.getScope());
+            assertEquals(expectedEdge.originalDependency.getId(), actualEdge.originalDependency.getId());
         }
     }
 
@@ -163,16 +173,20 @@ public class GraphBuilderTest extends PlexusTestCase {
         expectedGraph = new Graph(createArtifactId(nodeId));
     }
 
-    private void expectEdge(String fromNodeId, String toNodeId, String depInfo) {
+      private void expectEdge(String fromNodeId, String toNodeId, String depInfo) {
+          expectEdge(fromNodeId, toNodeId, null, depInfo);
+      }
+
+    private void expectEdge(String fromNodeId, String toNodeId, String scope, String depInfo) {
         if (expectedGraph == null) {
             expectedGraph = new Graph(createArtifactId(fromNodeId));
         }
         ArtifactRevisionIdentifier fromArtifact = createArtifactId(fromNodeId);
         ArtifactRevisionIdentifier toArtifact = createArtifactId(toNodeId);
         String[] split = depInfo.split(":");
-        String scope = split[0];
-        String version = split[1];
-        expectedGraph.findOrCreate(fromArtifact).addDependency(toArtifact, new ArtifactDependency(new ArtifactRevisionIdentifier(toArtifact.getArtifactId(), toArtifact.getGroupId(), version), scope));
+        String originalScope = split[0];
+        String originalVersion = split[1];
+        expectedGraph.findOrCreate(fromArtifact).addDependency(toArtifact, scope == null ? originalScope : scope, new ArtifactDependency(new ArtifactRevisionIdentifier(toArtifact.getArtifactId(), toArtifact.getGroupId(), originalVersion), originalScope));
     }
 
     private ArtifactRevisionIdentifier createArtifactId(String nodeId) {

@@ -18,12 +18,6 @@ import java.util.*;
  */
 public class BreadthFirstGraphBuilder implements GraphBuilder {
 
-    private static final DependencyAttributeRetriever SCOPE = new DependencyAttributeRetriever() {
-        public String getAttributeValue(ArtifactDependency dep) {
-            return dep.getScope();
-        }
-    };
-
     private static final DependencyAttributeRetriever VERSION = new DependencyAttributeRetriever() {
         public String getAttributeValue(ArtifactDependency dep) {
             return dep.getId().getVersion();
@@ -47,14 +41,16 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         private final ArtifactToResolve parent;
         private final NearestDependencySet nearestDependencySet;
         private final Map<ArtifactIdentifier, ArtifactDependency> dependencyMgnt = new HashMap<ArtifactIdentifier, ArtifactDependency>();
+        private final DependencyOptions options;
 
 
-        private ArtifactToResolve(Vertex vertex, ArtifactToResolve parent, int depth, ArtifactDependency incoming, NearestDependencySet nearestDependencySet) {
+        private ArtifactToResolve(Vertex vertex, ArtifactToResolve parent, int depth, ArtifactDependency incoming, NearestDependencySet nearestDependencySet, DependencyOptions options) {
             this.vertex = vertex;
             this.parent = parent;
             this.depth = depth;
             this.incoming = incoming;
             this.nearestDependencySet = nearestDependencySet;
+            this.options = options;
         }
 
         public void print() {
@@ -86,9 +82,11 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
             if (!isOptionalOrExcluded(dependency, scope)) {
                 nearestDependencySet.add(dependency.getId().getArtifactIdentifier(), getOverriddenDependencyValue(dependency, VERSION));
                 ArtifactDependency nearestDependency = nearestDependencySet.getNearest(dependency, scope);
-                if (isDependencyShown(scope)) {
-                    Vertex depVertex = vertex.addDependency(nearestDependency.getId(), dependency);
-                    return new ArtifactToResolve(depVertex, this, depth + 1, dependency, nearestDependencySet);
+                if (isDependencyShown(scope, options)) {
+                    Vertex depVertex = vertex.addDependency(nearestDependency.getId(), scope, dependency);
+                    if (isDependencyTransitive(scope)) {
+                        return new ArtifactToResolve(depVertex, this, depth + 1, dependency, nearestDependencySet, options);
+                    }
                 }
             }
             return null;
@@ -125,9 +123,9 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
     }
 
 
-    private void getAllDependencies(Vertex vertex) {
+    private void getAllDependencies(Vertex vertex, DependencyOptions options) {
         Queue<ArtifactToResolve> artifactQueue = new LinkedList<ArtifactToResolve>();
-        artifactQueue.add(new ArtifactToResolve(vertex, null, 0, null, new NearestDependencySet()));
+        artifactQueue.add(new ArtifactToResolve(vertex, null, 0, null, new NearestDependencySet(), options));
         while (!artifactQueue.isEmpty()) {
             ArtifactToResolve artifactToResolve = artifactQueue.poll();
             artifactToResolve.print();
@@ -150,10 +148,10 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         }
     }
 
-    public Graph buildGraph(ArtifactRevisionIdentifier artifact) {
+    public Graph buildGraph(ArtifactRevisionIdentifier artifact, DependencyOptions options) {
         //getAllDependencies(artifact);
         Graph graph = new Graph(artifact);
-        getAllDependencies(graph.getRoot());
+        getAllDependencies(graph.getRoot(), options);
         return graph;
     }
 
@@ -178,9 +176,12 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         }
     }
 
-    private static boolean isDependencyShown(String scope) {
-        return !scope.equals("provided");
+    private static boolean isDependencyShown(String scope, DependencyOptions options) {
+        return options.isShowProvidedScope() || !scope.equals("provided");
     }
 
+    private static boolean isDependencyTransitive(String scope) {
+        return !scope.equals("provided");
+    }
 
 }

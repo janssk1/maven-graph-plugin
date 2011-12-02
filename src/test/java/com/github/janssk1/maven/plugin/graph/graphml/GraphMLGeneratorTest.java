@@ -1,5 +1,6 @@
 package com.github.janssk1.maven.plugin.graph.graphml;
 
+import com.github.janssk1.maven.plugin.graph.RenderOptions;
 import com.github.janssk1.maven.plugin.graph.domain.ArtifactDependency;
 import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import com.github.janssk1.maven.plugin.graph.domain.MockArtifact;
@@ -43,13 +44,13 @@ public class GraphMLGeneratorTest extends TestCase {
         Graph graph = new Graph(new ArtifactRevisionIdentifier("a", "a", "1.0"));
         Vertex root = graph.getRoot();
         root.setArtifact(new MockArtifact());
-        root.addDependency(new ArtifactRevisionIdentifier("a", "b", "1"), new ArtifactDependency(new ArtifactRevisionIdentifier("a", "b", "2"), "default"));
+        root.addDependency(new ArtifactRevisionIdentifier("a", "b", "1"), "compile", new ArtifactDependency(new ArtifactRevisionIdentifier("a", "b", "2"), "default"));
         generateAndValidate(graph);
     }
 
     private void generateAndValidate(Graph graph) throws IOException, SAXException {
         StringWriter writer = new StringWriter();
-        graphMLGenerator.serialize(graph, writer);
+        graphMLGenerator.serialize(graph, writer, new RenderOptions());
         schemaValidator.validate(new StreamSource(new StringReader(writer.toString())));
     }
 }

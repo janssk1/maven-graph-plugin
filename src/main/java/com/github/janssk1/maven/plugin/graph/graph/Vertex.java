@@ -40,9 +40,9 @@ public class Vertex {
         this.artifact = artifact;
     }
 
-    public Vertex addDependency(ArtifactRevisionIdentifier nearest, ArtifactDependency original) {
+    public Vertex addDependency(ArtifactRevisionIdentifier nearest, String scope, ArtifactDependency original) {
         Vertex target = graph.findOrCreate(nearest);
-        Edge e = new Edge(original, this, target);
+        Edge e = new Edge(original, this, target, scope);
         edges.add(e);
         return target;
     }

@@ -10,5 +10,5 @@ import com.github.janssk1.maven.plugin.graph.graph.Graph;
  */
 public interface GraphBuilder {
 
-    Graph buildGraph(ArtifactRevisionIdentifier artifact);
+    Graph buildGraph(ArtifactRevisionIdentifier artifact, DependencyOptions options);
 }

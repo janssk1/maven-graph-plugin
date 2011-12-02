@@ -9,15 +9,17 @@ import com.github.janssk1.maven.plugin.graph.domain.ArtifactDependency;
  */
 public class Edge {
 
-    public final ArtifactDependency dependency;
+    public final ArtifactDependency originalDependency;
+    public final String scope;
 
     public final Vertex from;
     public final Vertex to;
 
-    public Edge(ArtifactDependency dependency, Vertex from, Vertex to) {
-        this.dependency = dependency;
+    public Edge(ArtifactDependency dependency, Vertex from, Vertex to, String scope) {
+        this.originalDependency = dependency;
         this.from = from;
         this.to = to;
+        this.scope = scope;
     }
 
     @Override

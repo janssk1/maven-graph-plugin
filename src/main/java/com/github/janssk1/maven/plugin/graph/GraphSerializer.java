@@ -12,7 +12,7 @@ import java.io.Writer;
  */
 public interface GraphSerializer {
 
-    void serialize(Graph graph, Writer writer) throws IOException;
+    void serialize(Graph graph, Writer writer, RenderOptions options) throws IOException;
 
 
 }

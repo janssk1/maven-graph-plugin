@@ -19,6 +19,7 @@ package com.github.janssk1.maven.plugin.graph;
 import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import com.github.janssk1.maven.plugin.graph.graph.Graph;
 import com.github.janssk1.maven.plugin.graph.graphml.GraphMLGenerator;
+import com.github.janssk1.maven.plugin.graph.graphml.SizeVertexRenderer;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
@@ -40,12 +41,19 @@ public class GraphMojo
 
 
     /**
+     * Set to false to hide provided scope dependencies
+     *
+     * @parameter expression="${graph.showProvidedScope}" default-value="true"
+     */
+
+    private boolean showProvidedScope;
+
+    /**
      * @component
      * @required
      * @readonly
      */
     private MavenProjectBuilder mavenProjectBuilder;
-
 
 
     /**
@@ -97,13 +105,14 @@ public class GraphMojo
     public void execute()
             throws MojoExecutionException {
 
+        getLog().info("Options used during graph calculation: showProvidedScope=" + showProvidedScope);
         ArtifactResolver artifactResolver = new MavenArtifactResolver(getLog(), localRepository, this.artifactFactory, mavenProjectBuilder);
         GraphBuilder graphBuilder = new BreadthFirstGraphBuilder(getLog(), artifactResolver);
-        Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version));
+        Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version), new DependencyOptions().setShowProvidedScope(showProvidedScope));
         GraphSerializer graphSerializer = new GraphMLGenerator();
         try {
             File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-deps.graphml");
-            graphSerializer.serialize(graph, new FileWriter(file));
+            graphSerializer.serialize(graph, new FileWriter(file), new RenderOptions().setVertexRenderer(new SizeVertexRenderer()));
             getLog().info("Created dependency graph in " + file);
         } catch (IOException e) {
             throw new MojoExecutionException("Can't write to file", e);
