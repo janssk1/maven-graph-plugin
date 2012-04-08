@@ -25,19 +25,13 @@
     <groupId>a</groupId>
     <artifactId>c</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-withtestscopeda</version>
+    <version>1.0-withnestedtestscopeda</version>
 
     <dependencies>
-        <dependency>
-            <groupId>a</groupId>
-            <artifactId>b</artifactId>
-            <version>1.0</version>
-        </dependency>
          <dependency>
             <groupId>a</groupId>
-            <artifactId>a</artifactId>
-            <version>1.1</version>
-            <scope>test</scope>
+            <artifactId>b</artifactId>
+            <version>1.0-withtestscopeda</version>
         </dependency>
     </dependencies>
 </project>

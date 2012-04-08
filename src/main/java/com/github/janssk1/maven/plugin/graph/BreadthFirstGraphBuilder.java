@@ -54,7 +54,7 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         }
 
         public void print() {
-            StringBuffer offset = new StringBuffer();
+            StringBuilder offset = new StringBuilder();
             for (int i = 0; i < depth; i++) {
                 offset.append("\t");
             }
@@ -76,28 +76,48 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
               }
             return scope;
         }
-        public ArtifactToResolve createDependency(ArtifactDependency dependency) {
-            String scope = getScope(dependency, dependency.getScope());//dependency, SCOPE);
 
-            if (!isOptionalOrExcluded(dependency, scope)) {
+        public ArtifactToResolve createDependency(ArtifactDependency dependency) {
+            String incomingScope = getIncomingDependencyScope();
+            String scope = getScope(dependency, dependency.getScope());//dependency, SCOPE);
+            String transitiveScope = getTransitiveScope(scope, incomingScope);
+            if (transitiveScope != null && !isOptionalOrExcluded(dependency, transitiveScope)) {
                 nearestDependencySet.add(dependency.getId().getArtifactIdentifier(), getOverriddenDependencyValue(dependency, VERSION));
                 ArtifactDependency nearestDependency = nearestDependencySet.getNearest(dependency, scope);
-                if (isDependencyShown(scope, options)) {
-                    Vertex depVertex = vertex.addDependency(nearestDependency.getId(), scope, dependency);
-                    if (isDependencyTransitive(scope)) {
-                        return new ArtifactToResolve(depVertex, this, depth + 1, dependency, nearestDependencySet, options);
-                    }
+                Vertex depVertex = vertex.addDependency(nearestDependency.getId(), scope, dependency);
+                if (!(transitiveScope.equals("provided"))) {
+                    return new ArtifactToResolve(depVertex, this, depth + 1, dependency, nearestDependencySet, options);
                 }
             }
             return null;
         }
 
+        private String getTransitiveScope(String scope, String parentScope) {
+            if (parentScope != null) {
+                if (scope.equals("provided") || scope.equals("test")) {
+                    if (options.isIncludeAllTransitiveDependencies()) {
+                        //this path is not maven's way of doing things, but it helps in creating a single overview graph.
+                        return scope;
+                    } else {
+                        return null;
+                    }
+                }
+                if (parentScope.equals("runtime") || parentScope.equals("provided") || parentScope.equals("test")) {
+                    return parentScope;
+                }
+            }
+            return scope;
+        }
         private boolean isOptionalOrExcluded(ArtifactDependency artifactDependency, String scope) {
-            return scope.equals("test") || scope.equals("system") || artifactDependency.isOptional() || isExcluded(artifactDependency.getId().getArtifactIdentifier());
+            return options.getGraphType().isExcluded(scope) || "system".equals(scope) || artifactDependency.isOptional() || isExcluded(artifactDependency.getId().getArtifactIdentifier());
         }
 
         private boolean isExcluded(ArtifactIdentifier artifactIdentifier) {
             return incoming != null && (incoming.getExclusions().contains(artifactIdentifier) || parent.isExcluded(artifactIdentifier));
+        }
+
+        private String getIncomingDependencyScope() {
+            return incoming != null ? incoming.getScope() : null;
         }
 
         private String getOverriddenDependencyValue(ArtifactDependency dep, DependencyAttributeRetriever attribute) {
@@ -174,14 +194,6 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
                 idToVersionMap.put(identifier, version);
             }
         }
-    }
-
-    private static boolean isDependencyShown(String scope, DependencyOptions options) {
-        return options.isShowProvidedScope() || !scope.equals("provided");
-    }
-
-    private static boolean isDependencyTransitive(String scope) {
-        return !scope.equals("provided");
     }
 
 }

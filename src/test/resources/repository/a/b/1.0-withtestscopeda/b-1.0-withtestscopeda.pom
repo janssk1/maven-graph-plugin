@@ -23,21 +23,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>a</groupId>
-    <artifactId>c</artifactId>
+    <artifactId>b</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-withtestscopeda</version>
-
+    <version>1.1-withtestscopeda</version>
     <dependencies>
         <dependency>
             <groupId>a</groupId>
-            <artifactId>b</artifactId>
-            <version>1.0</version>
-        </dependency>
-         <dependency>
-            <groupId>a</groupId>
             <artifactId>a</artifactId>
-            <version>1.1</version>
+            <version>1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 </project>

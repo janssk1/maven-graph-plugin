@@ -18,6 +18,7 @@ import javax.xml.validation.Validator;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.URL;
 
 /**
  * User: janssk1
@@ -33,7 +34,8 @@ public class GraphMLGeneratorTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        Schema schema = factory.newSchema();
+        URL resource = Thread.currentThread().getContextClassLoader().getResource("ygraphml.xsd");
+        Schema schema = factory.newSchema(resource);
 
         // create a Validator instance, which can be used to validate an instance document
         schemaValidator = schema.newValidator();

@@ -41,12 +41,12 @@ public class GraphMojo
 
 
     /**
-     * Set to false to hide provided scope dependencies
+     * Set to false to skip transitive report generation
      *
-     * @parameter expression="${graph.showProvidedScope}" default-value="true"
+     * @parameter expression="${graph.generateTransitiveReports}" default-value="true"
      */
 
-    private boolean showProvidedScope;
+    private boolean generateTransitiveReports;
 
     /**
      * @component
@@ -105,18 +105,33 @@ public class GraphMojo
     public void execute()
             throws MojoExecutionException {
 
-        getLog().info("Options used during graph calculation: showProvidedScope=" + showProvidedScope);
+        getLog().info("Options used during graph calculation: generateTransitiveReports=" + generateTransitiveReports);
         ArtifactResolver artifactResolver = new MavenArtifactResolver(getLog(), localRepository, this.artifactFactory, mavenProjectBuilder);
+        buildGraph(artifactResolver, DependencyOptions.GraphType.PACKAGE, false);
+        buildGraph(artifactResolver, DependencyOptions.GraphType.COMPILE, false);
+        buildGraph(artifactResolver, DependencyOptions.GraphType.RUNTIME, false);
+        buildGraph(artifactResolver, DependencyOptions.GraphType.TEST, false);
+        if (generateTransitiveReports) {
+            buildGraph(artifactResolver, DependencyOptions.GraphType.COMPILE, true);
+            buildGraph(artifactResolver, DependencyOptions.GraphType.RUNTIME, true);
+            buildGraph(artifactResolver, DependencyOptions.GraphType.TEST, true);
+        }
+        //.System.out.println("graph = " + graph);
+    }
+
+    private void buildGraph(ArtifactResolver artifactResolver, DependencyOptions.GraphType graphType, boolean transitive) throws MojoExecutionException {
         GraphBuilder graphBuilder = new BreadthFirstGraphBuilder(getLog(), artifactResolver);
-        Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version), new DependencyOptions().setShowProvidedScope(showProvidedScope));
+        DependencyOptions options = new DependencyOptions();
+        options.setIncludeAllTransitiveDependencies(transitive);
+        options.setGraphType(graphType);
+        Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version), options);
         GraphSerializer graphSerializer = new GraphMLGenerator();
         try {
-            File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-deps.graphml");
+            File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-" + graphType + (options.isIncludeAllTransitiveDependencies() ? "-TRANSITIVE":"") + "-deps.graphml");
             graphSerializer.serialize(graph, new FileWriter(file), new RenderOptions().setVertexRenderer(new SizeVertexRenderer()));
             getLog().info("Created dependency graph in " + file);
         } catch (IOException e) {
             throw new MojoExecutionException("Can't write to file", e);
         }
-        //.System.out.println("graph = " + graph);
     }
 }

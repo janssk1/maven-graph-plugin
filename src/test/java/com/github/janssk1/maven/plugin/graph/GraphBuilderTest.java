@@ -78,13 +78,14 @@ public class GraphBuilderTest extends PlexusTestCase {
     }
 
     public void testProvidedNodeCanBeHidden() throws Exception {
-        options.setShowProvidedScope(false);
+        //options.setShowProvidedScope(false);
+        options.setGraphType(DependencyOptions.GraphType.PACKAGE);
         expectGraph("b:1.0-withprovideda");
         checkGraph();
     }
 
     public void testProvidedNodeCanBeShown() throws Exception {
-        options.setShowProvidedScope(true);
+        options.setIncludeAllTransitiveDependencies(true);
         expectGraph("b:1.0-withprovideda");
         expectEdge("b:1.0-withprovideda", "a:1.0", "provided:1.0");
         checkGraph();
@@ -122,6 +123,39 @@ public class GraphBuilderTest extends PlexusTestCase {
         expectGraph("c:1.0-withtestscopeda");
         expectEdge("c:1.0-withtestscopeda", "b:1.0", "compile:1.0");
         expectEdge("b:1.0", "a:1.0", "compile:1.0");
+        checkGraph();
+    }
+
+    public void testTestScopeIsIncludedWhenTestGraphIsRequested() {
+        options.setGraphType(DependencyOptions.GraphType.TEST);
+        expectGraph("c:1.0-withtestscopeda");
+        expectEdge("c:1.0-withtestscopeda", "b:1.0", "compile:1.0");
+        expectEdge("b:1.0", "a:1.1", "compile:1.0");
+        expectEdge("c:1.0-withtestscopeda", "a:1.1", "test:1.1");
+        checkGraph();
+    }
+
+    public void testNestedTestScopeIsIgnoredWhenCompileGraphIsRequested() {
+        options.setGraphType(DependencyOptions.GraphType.COMPILE);
+        expectGraph("c:1.0-withnestedtestscopeda");
+        expectEdge("c:1.0-withnestedtestscopeda", "b:1.0-withtestscopeda", "compile:1.0-withtestscopeda");
+        checkGraph();
+    }
+
+    public void testTestScopeDoesIncludeTransitiveCompileScopes() {
+        options.setIncludeAllTransitiveDependencies(false);
+        options.setGraphType(DependencyOptions.GraphType.TEST);
+        expectGraph("c:1.0-withtestscopedb");
+        expectEdge("c:1.0-withtestscopedb", "b:1.0", "test:1.0");
+        expectEdge("b:1.0", "a:1.0", "compile:1.0");
+        checkGraph();
+    }
+
+    public void testTransitiveTestScopeIsIgnored() {
+        options.setIncludeAllTransitiveDependencies(false);
+        options.setGraphType(DependencyOptions.GraphType.TEST);
+        expectGraph("c:1.0-withbthathastestscopeda");
+        expectEdge("c:1.0-withbthathastestscopeda", "b:1.0-withtestscopeda", "compile:1.0-withtestscopeda");
         checkGraph();
     }
 

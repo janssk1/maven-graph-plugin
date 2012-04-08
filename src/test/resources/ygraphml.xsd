@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+
+<!-- Header -->
+<xs:schema
+        targetNamespace="http://graphml.graphdrawing.org/xmlns/graphml"
+
+        xmlns="http://graphml.graphdrawing.org/xmlns/graphml"
+        xmlns:y="http://www.yworks.com/xml/graphml"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        >
+
+  <xs:annotation>
+    <xs:documentation>
+      GraphML core language definitions including GraphML attributes and GraphML parseinfo.
+    </xs:documentation>
+  </xs:annotation>
+  <xs:import namespace="http://www.yworks.com/xml/graphml" schemaLocation="yfeatures.xsd"/>
+
+  <!--<xs:include schemaLocation="graphml-parseinfo.xsd"/>-->
+
+  <!-- Redefinition of the elements in the graphml-structure schema -->
+  <xs:redefine schemaLocation="graphml.xsd">
+
+    <xs:attributeGroup name="key.extra.attrib">
+      <xs:annotation>
+        <xs:documentation>
+          Redefinition of file graphml-structure.xsd.
+          <p>Extends the attribute group key.extra.attrib (which takes
+            part in the attribute list of &lt;key>) by adding the
+            attribute yfiles.type which is defined below.
+          </p>
+        </xs:documentation>
+      </xs:annotation>
+      <xs:attributeGroup ref="key.extra.attrib"/>
+      <xs:attribute name="yfiles.type" type="xs:string" use="optional">
+        <xs:annotation>
+          <xs:documentation>
+            Custom yfiles specific attribute that allows to specify an additional data type.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:attributeGroup>
+
+    <!-- Definition of the different grouping types -->
+    <!-- The grouping type is stored as attribute at the node element -->
+    <xs:attributeGroup name="node.extra.attrib">
+      <xs:annotation>
+        <xs:documentation>
+          Redefinition of file graphml-structure.xsd.
+          <p>Extends the attribute group node.extra.attrib (which takes
+            part in the attribute list of &lt;node>) by adding a
+            yfiles specific attribute for the folder type.
+          </p>
+        </xs:documentation>
+      </xs:annotation>
+      <xs:attributeGroup ref="node.extra.attrib"/>
+      <xs:attribute name="yfiles.foldertype" type="yfiles.foldertype.type" use="optional">
+        <xs:annotation>
+          <xs:documentation>
+            The foldertype for group/folder nodes.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:attributeGroup>
+
+    <!-- Definition of the different node and edge types -->
+    <xs:complexType name="data-extension.type">
+      <xs:annotation>
+        <xs:documentation>
+          Redefinition of file graphml-structure.xsd.
+          <p>Extends the type data-extension.type to allow specifically the content below (i.e. text only or
+            all defined edge and node relaizers, resource blocks or postprocessors)
+          </p>
+        </xs:documentation>
+      </xs:annotation>
+      <xs:complexContent mixed="true">
+        <xs:extension base="data-extension.type">
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="y:ShapeNode"/>
+            <xs:element ref="y:ImageNode"/>
+            <xs:element ref="y:GroupNode"/>
+            <xs:element ref="y:GenericNode"/>
+            <xs:element ref="y:GenericGroupNode"/>
+            <xs:element ref="y:ProxyShapeNode"/>
+            <xs:element ref="y:ProxyAutoBoundsNode"/>
+            <xs:element ref="y:PolyLineEdge"/>
+            <xs:element ref="y:ArcEdge"/>
+            <xs:element ref="y:BezierEdge"/>
+            <xs:element ref="y:SplineEdge"/>
+            <xs:element ref="y:QuadCurveEdge"/>
+            <xs:element ref="y:GenericEdge"/>
+            <xs:element ref="y:Postprocessors"/>
+            <xs:element ref="y:Resources"/>
+          </xs:choice>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:redefine>
+
+  <!-- Type of Grouping -->
+  <xs:simpleType name="yfiles.foldertype.type">
+    <xs:annotation>
+      <xs:documentation>
+        The valid folder types for a folder/group node.
+        <p>Valid values are
+          <ul>
+            <li><b>folder</b>: for folder nodes</li>
+            <li><b>group</b>: for group nodes</li>
+            <li><b>leaf</b>: for leaf nodes (this is the implied value)</li>
+          </ul>
+        </p>
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:enumeration value="folder"/>
+      <xs:enumeration value="group"/>
+      <xs:enumeration value="leaf"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>
+
+
