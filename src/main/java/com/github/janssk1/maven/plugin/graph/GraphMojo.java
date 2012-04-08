@@ -29,9 +29,10 @@ import org.apache.maven.project.MavenProjectBuilder;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 /**
- * Goal which generates a dependency graph
+ * Goal which generates a set of dependency graphs
  *
  * @goal graph
  * @phase process-sources
@@ -41,12 +42,12 @@ public class GraphMojo
 
 
     /**
-     * Set to false to skip transitive report generation
+     * A comma separated list of report definitions
      *
-     * @parameter expression="${graph.generateTransitiveReports}" default-value="true"
+     * @parameter expression="${graph.reports}" default-value="PACKAGE,COMPILE,RUNTIME,TEST,COMPILE-TRANSITIVE"
      */
 
-    private boolean generateTransitiveReports;
+    private String reports;
 
     /**
      * @component
@@ -68,6 +69,7 @@ public class GraphMojo
      *
      * @parameter expression="${project.groupId}"
      * @required
+     * @readonly
      */
     private String groupId;
 
@@ -76,6 +78,7 @@ public class GraphMojo
      *
      * @parameter expression="${project.artifactId}"
      * @required
+     * @readonly
      */
     private String artifactId;
 
@@ -84,6 +87,7 @@ public class GraphMojo
      *
      * @parameter expression="${project.version}"
      * @required
+     * @readonly
      */
     private String version;
 
@@ -92,6 +96,7 @@ public class GraphMojo
      *
      * @parameter expression="${project.build.directory}"
      * @required
+     * @readonly
      */
     private File outputDirectory;
     /**
@@ -99,35 +104,29 @@ public class GraphMojo
      *
      * @parameter expression="${localRepository}"
      * @required
+     * @readonly
      */
     private ArtifactRepository localRepository;
 
     public void execute()
             throws MojoExecutionException {
 
-        getLog().info("Options used during graph calculation: generateTransitiveReports=" + generateTransitiveReports);
+
+        getLog().info("Using graph.reports=" + reports);
+        List<DependencyOptions> reportDefinitions = DependencyOptions.parseReportDefinitions(reports);
         ArtifactResolver artifactResolver = new MavenArtifactResolver(getLog(), localRepository, this.artifactFactory, mavenProjectBuilder);
-        buildGraph(artifactResolver, DependencyOptions.GraphType.PACKAGE, false);
-        buildGraph(artifactResolver, DependencyOptions.GraphType.COMPILE, false);
-        buildGraph(artifactResolver, DependencyOptions.GraphType.RUNTIME, false);
-        buildGraph(artifactResolver, DependencyOptions.GraphType.TEST, false);
-        if (generateTransitiveReports) {
-            buildGraph(artifactResolver, DependencyOptions.GraphType.COMPILE, true);
-            buildGraph(artifactResolver, DependencyOptions.GraphType.RUNTIME, true);
-            buildGraph(artifactResolver, DependencyOptions.GraphType.TEST, true);
+        for (DependencyOptions reportDefinition : reportDefinitions) {
+            buildGraph(artifactResolver, reportDefinition);
         }
-        //.System.out.println("graph = " + graph);
     }
 
-    private void buildGraph(ArtifactResolver artifactResolver, DependencyOptions.GraphType graphType, boolean transitive) throws MojoExecutionException {
+
+    private void buildGraph(ArtifactResolver artifactResolver, DependencyOptions options) throws MojoExecutionException {
         GraphBuilder graphBuilder = new BreadthFirstGraphBuilder(getLog(), artifactResolver);
-        DependencyOptions options = new DependencyOptions();
-        options.setIncludeAllTransitiveDependencies(transitive);
-        options.setGraphType(graphType);
         Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version), options);
         GraphSerializer graphSerializer = new GraphMLGenerator();
         try {
-            File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-" + graphType + (options.isIncludeAllTransitiveDependencies() ? "-TRANSITIVE":"") + "-deps.graphml");
+            File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-" + options.getGraphType() + (options.isIncludeAllTransitiveDependencies() ? "-TRANSITIVE":"") + "-deps.graphml");
             graphSerializer.serialize(graph, new FileWriter(file), new RenderOptions().setVertexRenderer(new SizeVertexRenderer()));
             getLog().info("Created dependency graph in " + file);
         } catch (IOException e) {

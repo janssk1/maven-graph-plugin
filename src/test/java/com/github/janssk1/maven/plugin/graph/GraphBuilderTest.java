@@ -15,6 +15,8 @@ import org.codehaus.plexus.PlexusTestCase;
 
 import java.net.URL;
 
+import static com.github.janssk1.maven.plugin.graph.DependencyOptions.GraphType.*;
+
 /**
  * User: janssk1
  * Date: 8/15/11
@@ -24,7 +26,7 @@ public class GraphBuilderTest extends PlexusTestCase {
 
     private GraphBuilder builder;
     private Graph expectedGraph;
-    private DependencyOptions options = new DependencyOptions();
+    private DependencyOptions options = new DependencyOptions(COMPILE, true);
 
     private <T> T getComponent(Class<T> t) throws Exception {
         return (T) lookup(t.getName());
@@ -79,13 +81,13 @@ public class GraphBuilderTest extends PlexusTestCase {
 
     public void testProvidedNodeCanBeHidden() throws Exception {
         //options.setShowProvidedScope(false);
-        options.setGraphType(DependencyOptions.GraphType.PACKAGE);
+        options = new DependencyOptions(PACKAGE, true);
         expectGraph("b:1.0-withprovideda");
         checkGraph();
     }
 
     public void testProvidedNodeCanBeShown() throws Exception {
-        options.setIncludeAllTransitiveDependencies(true);
+        options = new DependencyOptions(COMPILE, true);
         expectGraph("b:1.0-withprovideda");
         expectEdge("b:1.0-withprovideda", "a:1.0", "provided:1.0");
         checkGraph();
@@ -127,7 +129,7 @@ public class GraphBuilderTest extends PlexusTestCase {
     }
 
     public void testTestScopeIsIncludedWhenTestGraphIsRequested() {
-        options.setGraphType(DependencyOptions.GraphType.TEST);
+        options = new DependencyOptions(TEST, false);
         expectGraph("c:1.0-withtestscopeda");
         expectEdge("c:1.0-withtestscopeda", "b:1.0", "compile:1.0");
         expectEdge("b:1.0", "a:1.1", "compile:1.0");
@@ -136,15 +138,13 @@ public class GraphBuilderTest extends PlexusTestCase {
     }
 
     public void testNestedTestScopeIsIgnoredWhenCompileGraphIsRequested() {
-        options.setGraphType(DependencyOptions.GraphType.COMPILE);
         expectGraph("c:1.0-withnestedtestscopeda");
         expectEdge("c:1.0-withnestedtestscopeda", "b:1.0-withtestscopeda", "compile:1.0-withtestscopeda");
         checkGraph();
     }
 
     public void testTestScopeDoesIncludeTransitiveCompileScopes() {
-        options.setIncludeAllTransitiveDependencies(false);
-        options.setGraphType(DependencyOptions.GraphType.TEST);
+        options = new DependencyOptions(TEST, false);
         expectGraph("c:1.0-withtestscopedb");
         expectEdge("c:1.0-withtestscopedb", "b:1.0", "test:1.0");
         expectEdge("b:1.0", "a:1.0", "compile:1.0");
@@ -152,8 +152,7 @@ public class GraphBuilderTest extends PlexusTestCase {
     }
 
     public void testTransitiveTestScopeIsIgnored() {
-        options.setIncludeAllTransitiveDependencies(false);
-        options.setGraphType(DependencyOptions.GraphType.TEST);
+        options = new DependencyOptions(TEST, false);
         expectGraph("c:1.0-withbthathastestscopeda");
         expectEdge("c:1.0-withbthathastestscopeda", "b:1.0-withtestscopeda", "compile:1.0-withtestscopeda");
         checkGraph();
