@@ -4,6 +4,7 @@
         targetNamespace="http://graphml.graphdrawing.org/xmlns/graphml"
 
         xmlns="http://graphml.graphdrawing.org/xmlns/graphml"
+        xmlns:g="http://graphml.graphdrawing.org/xmlns/graphml"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:xlink="http://www.w3.org/1999/xlink"
 

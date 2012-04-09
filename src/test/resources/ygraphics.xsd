@@ -5,6 +5,7 @@
         targetNamespace="http://www.yworks.com/xml/graphml"
 
         xmlns="http://www.yworks.com/xml/graphml"
+        xmlns:y="http://www.yworks.com/xml/graphml"
         xmlns:xs="http://www.w3.org/2001/XMLSchema"
 
         elementFormDefault="qualified"
