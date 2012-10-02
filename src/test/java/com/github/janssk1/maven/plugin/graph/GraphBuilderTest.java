@@ -166,6 +166,16 @@ public class GraphBuilderTest extends PlexusTestCase {
         checkGraph();
     }
 
+    public void testNestedProvidedScopeIsIgnored() throws Exception {
+        options = new DependencyOptions(COMPILE, false);
+        expectGraph("d:1.1");
+        expectEdge("d:1.1", "c:1.0-withprovideda", "provided:1.0-withprovideda");
+        expectEdge("c:1.0-withprovideda:1.0", "b:1.0", "compile:1.0");
+        //expectEdge("b:1.0", "a:1.0", "provided:1.0"); ignored
+        checkGraph();
+    }
+
+
     public void testNearestDependencyInAnotherBranchIsSelectedAnyway() throws Exception {
         expectGraph("e:1.0");
         expectEdge("e:1.0", "c:1.0", "compile:1.0");

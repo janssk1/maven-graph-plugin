@@ -38,19 +38,21 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         private final int depth;
 
         private final ArtifactDependency incoming;
+        private final String incomingScope;
         private final ArtifactToResolve parent;
         private final NearestDependencySet nearestDependencySet;
         private final Map<ArtifactIdentifier, ArtifactDependency> dependencyMgnt = new HashMap<ArtifactIdentifier, ArtifactDependency>();
         private final DependencyOptions options;
 
 
-        private ArtifactToResolve(Vertex vertex, ArtifactToResolve parent, int depth, ArtifactDependency incoming, NearestDependencySet nearestDependencySet, DependencyOptions options) {
+        private ArtifactToResolve(Vertex vertex, ArtifactToResolve parent, int depth, ArtifactDependency incoming, String incomingScope, NearestDependencySet nearestDependencySet, DependencyOptions options) {
             this.vertex = vertex;
             this.parent = parent;
             this.depth = depth;
             this.incoming = incoming;
             this.nearestDependencySet = nearestDependencySet;
             this.options = options;
+            this.incomingScope = incomingScope;
         }
 
         public void print() {
@@ -85,9 +87,9 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
                 nearestDependencySet.add(dependency.getId().getArtifactIdentifier(), getOverriddenDependencyValue(dependency, VERSION));
                 ArtifactDependency nearestDependency = nearestDependencySet.getNearest(dependency, scope);
                 Vertex depVertex = vertex.addDependency(nearestDependency.getId(), scope, dependency);
-                if (!(transitiveScope.equals("provided"))) {
-                    return new ArtifactToResolve(depVertex, this, depth + 1, dependency, nearestDependencySet, options);
-                }
+              //  if (!(transitiveScope.equals("provided"))) {
+                    return new ArtifactToResolve(depVertex, this, depth + 1, dependency, transitiveScope, nearestDependencySet, options);
+              //  }
             }
             return null;
         }
@@ -117,7 +119,7 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
         }
 
         private String getIncomingDependencyScope() {
-            return incoming != null ? incoming.getScope() : null;
+            return incomingScope;
         }
 
         private String getOverriddenDependencyValue(ArtifactDependency dep, DependencyAttributeRetriever attribute) {
@@ -145,7 +147,7 @@ public class BreadthFirstGraphBuilder implements GraphBuilder {
 
     private void getAllDependencies(Vertex vertex, DependencyOptions options) {
         Queue<ArtifactToResolve> artifactQueue = new LinkedList<ArtifactToResolve>();
-        artifactQueue.add(new ArtifactToResolve(vertex, null, 0, null, new NearestDependencySet(), options));
+        artifactQueue.add(new ArtifactToResolve(vertex, null, 0, null, null, new NearestDependencySet(), options));
         while (!artifactQueue.isEmpty()) {
             ArtifactToResolve artifactToResolve = artifactQueue.poll();
             artifactToResolve.print();
