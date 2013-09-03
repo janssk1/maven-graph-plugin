@@ -36,18 +36,20 @@ public class BreadthFirstGraphBuilder implements GraphBuilder
 
   private final Log                                 logger;
 
-  private String                                    groupIdToMatch;
+  private String[]                                  excludedGroupIds;
+  private String[]                                  excludedArtifactIds;
 
   public BreadthFirstGraphBuilder(Log logger, ArtifactResolver artifactResolver)
   {
-    this(logger, artifactResolver, null);
+    this(logger, artifactResolver, null, null);
   }
 
-  public BreadthFirstGraphBuilder(Log logger, ArtifactResolver artifactResolver, String groupIdToMatch)
+  public BreadthFirstGraphBuilder(Log logger, ArtifactResolver artifactResolver, String[] excludedGroupIds, String[] excludedArtifactIds)
   {
     this.logger = logger;
     this.artifactResolver = artifactResolver;
-    this.groupIdToMatch = groupIdToMatch;
+    this.excludedGroupIds = excludedGroupIds;
+    this.excludedArtifactIds = excludedArtifactIds;
   }
 
   private class ArtifactToResolve
@@ -114,13 +116,37 @@ public class BreadthFirstGraphBuilder implements GraphBuilder
         ArtifactDependency nearestDependency = nearestDependencySet.getNearest(dependency, scope);
 
         ArtifactRevisionIdentifier identifier = nearestDependency.getId();
-        if (!StringUtils.isBlank(groupIdToMatch) && !identifier.getGroupId().matches(groupIdToMatch))
+        boolean excludeArtifact = false;
+        if (excludedGroupIds != null && excludedGroupIds.length != 0)
+        {
+          for (String excludedGroupId : excludedGroupIds)
+          {
+            if (!StringUtils.isBlank(excludedGroupId) && identifier.getGroupId().matches(excludedGroupId))
+            {
+              excludeArtifact = true;
+            }
+          }
+        }
+        if (excludeArtifact == false && excludedArtifactIds != null && excludedArtifactIds.length != 0)
+        {
+          for (String excludedArtifact : excludedArtifactIds)
+          {
+            if (!StringUtils.isBlank(excludedArtifact) && identifier.getArtifactId().matches(excludedArtifact))
+            {
+              excludeArtifact = true;
+            }
+          }
+        }
+
+        if (excludeArtifact)
         {
           logger.info("Ignoring '" + identifier.getGroupId() + ":" + identifier.getArtifactId()
-                      + "' because it does not match the valid group Id regex");
+                      + "' because it does not match the valid groupId and/or artifactId regex");
+
         }
         else
         {
+          logger.info("Not Ignoring '" + identifier.getGroupId() + ":" + identifier.getArtifactId());
           Vertex depVertex = vertex.addDependency(nearestDependency.getId(), scope, dependency);
           return new ArtifactToResolve(depVertex, this, depth + 1, dependency, transitiveScope, nearestDependencySet, options);
         }

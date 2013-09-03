@@ -50,12 +50,16 @@ public class GraphMojo extends AbstractMojo
   private String              reports;
 
   /**
-   * A regular expression used to filter out artifacts that DO NOT match whose groupId do not match this expression
    *
-   * @parameter default-value=""
+   * @parameter alias="excludedGroupId"
    */
+  private String[]            excludedGroupIds;
 
-  private String              groupIdToMatch;
+  /**
+   *
+   * @parameter alias="excludedGroupId"
+   */
+  private String[]            excludedArtifactIds;
 
   /**
    * shows the artifact version on the graph
@@ -144,7 +148,7 @@ public class GraphMojo extends AbstractMojo
 
   private void buildGraph(ArtifactResolver artifactResolver, DependencyOptions options) throws MojoExecutionException
   {
-    GraphBuilder graphBuilder = new BreadthFirstGraphBuilder(getLog(), artifactResolver, groupIdToMatch);
+    GraphBuilder graphBuilder = new BreadthFirstGraphBuilder(getLog(), artifactResolver, excludedGroupIds, excludedArtifactIds);
     Graph graph = graphBuilder.buildGraph(new ArtifactRevisionIdentifier(artifactId, groupId, version), options);
     GraphSerializer graphSerializer = new GraphMLGenerator();
     try
@@ -163,4 +167,5 @@ public class GraphMojo extends AbstractMojo
       throw new MojoExecutionException("Can't write to file", e);
     }
   }
+
 }
