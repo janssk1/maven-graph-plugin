@@ -1,8 +1,9 @@
 Documentation can be found at https://github.com/janssk1/maven-graph-plugin/wiki/Manual
 
 
-*Example*
+# Example
 
+```
 <plugin>
 	<groupId>com.github.janssk1</groupId>
 	<artifactId>maven-dependencygraph-plugin</artifactId>
@@ -21,3 +22,4 @@ Documentation can be found at https://github.com/janssk1/maven-graph-plugin/wiki
 		<showEdgeLabels>false</showEdgeLabels>
 	</configuration>
 </plugin>
+```
