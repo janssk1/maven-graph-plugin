@@ -26,6 +26,7 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProjectBuilder;
+import org.codehaus.plexus.util.StringUtils;
 
 import com.github.janssk1.maven.plugin.graph.domain.ArtifactRevisionIdentifier;
 import com.github.janssk1.maven.plugin.graph.graph.Graph;
@@ -118,6 +119,13 @@ public class GraphMojo extends AbstractMojo
   private String              version;
 
   /**
+   *
+   * @parameter expression="${project.build.finalName}"
+   * @required
+   */
+  private String              finalName;
+
+  /**
   * Location of the file.
   *
   * @parameter expression="${project.build.directory}"
@@ -157,8 +165,14 @@ public class GraphMojo extends AbstractMojo
       {
         outputDirectory.mkdirs();
       }
-      File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-" + options.getGraphType()
-                                            + (options.isIncludeAllTransitiveDependencies() ? "-TRANSITIVE" : "") + "-deps.graphml");
+      String outputFileName = this.artifactId + "-" + this.version + "-" + options.getGraphType()
+                              + (options.isIncludeAllTransitiveDependencies() ? "-TRANSITIVE" : "");
+      if (StringUtils.isNotBlank(finalName))
+      {
+        outputFileName = finalName;
+      }
+      outputFileName += "-deps.graphml";
+      File file = new File(outputDirectory, outputFileName);
       graphSerializer.serialize(graph, new FileWriter(file), new RenderOptions(new SimpleVertexRenderer(showVersion), showEdgeLabels));
       getLog().info("Created dependency graph in " + file);
     }

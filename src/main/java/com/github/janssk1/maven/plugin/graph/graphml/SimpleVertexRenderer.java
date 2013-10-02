@@ -23,7 +23,7 @@ public class SimpleVertexRenderer implements RenderOptions.VertexRenderer
     {
       colors[i] = new Color(colors.length - i, colors.length - i, 255);
     }
-    return new FixedIntervalColorRange(0, 20000 * K, colors);
+    return new FixedIntervalColorRange(0, 100000 * K, colors);
 
   }
 
