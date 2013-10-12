@@ -26,7 +26,7 @@
         </developer>
     </developers>
     <properties>
-        <mavenVersion>2.2.1</mavenVersion>
+        <mavenVersion>3.0.4</mavenVersion>
     </properties>
     <build>
         <plugins>
@@ -68,6 +68,7 @@
     </build>
 
     <dependencies>
+
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-artifact</artifactId>
@@ -75,14 +76,29 @@
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
+            <artifactId>maven-compat</artifactId>
+            <version>${mavenVersion}</version>
+        </dependency>
+        <dependency>
+            <!-- bundled xerces with JDK 7 fails -->
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.9.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>${mavenVersion}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-project</artifactId>
             <version>${mavenVersion}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
@@ -93,11 +109,13 @@
             <artifactId>maven-core</artifactId>
             <version>${mavenVersion}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-artifact-manager</artifactId>
             <version>${mavenVersion}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

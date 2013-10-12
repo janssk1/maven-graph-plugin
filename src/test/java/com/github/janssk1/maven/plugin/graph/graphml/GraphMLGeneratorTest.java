@@ -27,7 +27,11 @@ import java.net.URL;
  */
 public class GraphMLGeneratorTest extends TestCase {
 
-    private static final SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    //private static final SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+    private static final SchemaFactory factory = SchemaFactory.newInstance(
+            XMLConstants.W3C_XML_SCHEMA_NS_URI,
+            "org.apache.xerces.jaxp.validation.XMLSchemaFactory",
+            null);
     private Validator schemaValidator;
 
     private final GraphMLGenerator graphMLGenerator = new GraphMLGenerator();
