@@ -122,8 +122,8 @@
         </dependency>
     </dependencies>
     <scm>
-        <connection>scm:git:https@github.com:janssk1/maven-graph-plugin.git</connection>
+        <connection>scm:git:https://janssk1@github.com/janssk1/maven-graph-plugin.git</connection>
         <url>https://github.com/janssk1/maven-graph-plugin</url>
-        <developerConnection>scm:git:https@github.com:janssk1/maven-graph-plugin.git</developerConnection>
+        <developerConnection>scm:git:https://janssk1@github.com/janssk1/maven-graph-plugin.git</developerConnection>
     </scm>
 </project>
