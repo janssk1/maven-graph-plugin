@@ -59,6 +59,10 @@ public class ArtifactRevisionIdentifier {
     public String toString() {
         return artifactIdentifier.toString() + ":" + version;
     }
+    
+    public String getIdentifierWithoutVersion() {
+      return artifactIdentifier.toString();
+    }
 
     public String getGroupId() {
         return artifactIdentifier.getGroupId();
