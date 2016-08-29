@@ -127,6 +127,7 @@ public class GraphMojo
         GraphSerializer graphSerializer = new GraphMLGenerator();
         try {
             File file = new File(outputDirectory, this.artifactId + "-" + this.version + "-" + options.getGraphType() + (options.isIncludeAllTransitiveDependencies() ? "-TRANSITIVE":"") + "-deps.graphml");
+            file.getParentFile().mkdirs();
             graphSerializer.serialize(graph, new FileWriter(file), new RenderOptions().setVertexRenderer(new SizeVertexRenderer()));
             getLog().info("Created dependency graph in " + file);
         } catch (IOException e) {
