@@ -3,7 +3,7 @@
     <groupId>com.github.janssk1</groupId>
     <artifactId>maven-dependencygraph-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <name>Maven Dependency Graph Plugin</name>
     <description>Generates a dependency graph in graphml format</description>
     <url>https://github.com/janssk1/maven-graph-plugin/wiki/Manual</url>
@@ -147,6 +147,6 @@
         <connection>scm:git:https://janssk1@github.com/janssk1/maven-graph-plugin.git</connection>
         <url>https://github.com/janssk1/maven-graph-plugin</url>
         <developerConnection>scm:git:https://janssk1@github.com/janssk1/maven-graph-plugin.git</developerConnection>
-      <tag>maven-dependencygraph-plugin-1.4</tag>
+      <tag>HEAD</tag>
   </scm>
 </project>
