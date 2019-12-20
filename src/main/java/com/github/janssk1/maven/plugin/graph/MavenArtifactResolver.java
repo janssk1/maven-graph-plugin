@@ -56,7 +56,8 @@ public class MavenArtifactResolver implements ArtifactResolver{
 
             return createArtifact(identifier, mavenProject);
         } catch (ProjectBuildingException e) {
-            logger.warn(e);
+            logger.warn("Ignoring dependencies of unknown artifact " + identifier);
+            logger.debug(e);
             return new MockArtifact();
         }
     }
